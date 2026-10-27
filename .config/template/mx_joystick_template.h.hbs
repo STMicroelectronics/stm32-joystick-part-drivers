@@ -1,0 +1,117 @@
+{{!--
+  ******************************************************************************
+  * file           : mx_joystick_template.h.hbs
+  * brief          : Code generation for the Joystick part driver.
+  ******************************************************************************
+  * attention
+  *
+  * Copyright (c) 2026 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+~--}}
+/**
+  ******************************************************************************
+  * file           : mx_joystick.h
+  * brief          : Code generation for the Joystick part driver.
+  ******************************************************************************
+  * attention
+  *
+  * Copyright (c) {{#unless (eq 2026 (toInt (year)))}}2026-{{/unless}}{{year}} STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the mx_joystick_license.md file
+  * in the same directory as the generated code.
+  * If no mx_joystick_license.md file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
+
+{{assign 'joy_instances' (@root.SWConfigurationAPI.getInstances "STMicroelectronics::Board Part:STM32CubeMX2 Config:JOYSTICK")~}}
+{{assign 'IsADCioUsed' false~}}
+{{#each @root.joy_instances~}}
+{{assign 'ctx' (@root.SWConfigurationAPI.getSwInstanceConfiguration  this)~}}
+{{#if (eq @root.ctx.info.interface 'ADC')~}}
+{{assign 'IsADCioUsed' true~}}
+{{/if}}
+{{/each}}
+/* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef MX_JOYSTICK_H
+#define MX_JOYSTICK_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Includes ------------------------------------------------------------------ */
+{{#if (eq @root.IsADCioUsed true)}}
+#include "joystick_adc.h"
+{{/if}}
+#include "mx_hal_def.h"
+
+/* Exported macros ----------------------------------------------------------- */
+{{#if (eq @root.IsADCioUsed true)}}
+/* The reference voltage is equal to the voltage at which the mcu is operating (usually 3.3V) */
+#define JOYSTICK_ADC_VOLTAGE_REFERENCE                 3.3
+
+{{#each @root.joy_instances}}
+{{assign 'ctx' (@root.SWConfigurationAPI.getSwInstanceConfiguration this)~}}
+{{#with @root.ctx}}
+/* Part Config ID */
+#define JOYSTICK_ADC_{{@index}}                   {{@index}} /* Main label */
+#define {{info.label}}                                  {{@index}} /* Extra Label */
+
+/* Alias for the getter function based on the extra label */
+#define {{lowercase info.label}}_getobject()      mx_joystick_adc_{{@index}}_getobject()
+
+/* Resource bindings */
+{{#with @root.ctx.resourcesAllocation.adcIoCfg~}}
+{{assign 'joyAdcInstance' adcInstance.selection~}}
+{{assign 'joyAdcInstanceLowercase' (lowercase @root.joyAdcInstance)~}}
+{{assign 'AdcBoundSwInstanceID' (@root.SWConfigurationAPI.getBoundSwInstanceId adcInstance)~}}
+{{assign 'AdcInstanceConfiguration' (@root.SWConfigurationAPI.getInstanceConfiguration @root.AdcBoundSwInstanceID)~}}
+
+/* Part interface Properties */
+#define JOYSTICK_ADC_{{@index}}_ADC_GETHANDLE        mx_{{helper_joystick_get_adc_instance_name @root.joyAdcInstanceLowercase}}_gethandle
+
+/* Adc Resolution */
+#define JOYSTICK_ADC_{{@index}}_RESOLUTION           {{helper_joystick_get_adc_resolution @root.AdcInstanceConfiguration}}
+
+/* Input voltage (in volts) applied to the ADC pin for each key */
+#define JOYSTICK_ADC_{{@index}}_KEY_CENTER_VOLTAGE   {{key_center_voltage_value}}
+#define JOYSTICK_ADC_{{@index}}_KEY_LEFT_VOLTAGE     {{key_left_voltage_value}}
+#define JOYSTICK_ADC_{{@index}}_KEY_DOWN_VOLTAGE     {{key_down_voltage_value}}
+#define JOYSTICK_ADC_{{@index}}_KEY_UP_VOLTAGE       {{key_up_voltage_value}}
+#define JOYSTICK_ADC_{{@index}}_KEY_RIGHT_VOLTAGE    {{key_right_voltage_value}}
+
+/* Input ADC value for each key */
+#define JOYSTICK_ADC_{{@index}}_KEY_UP_VAL       ((JOYSTICK_ADC_{{@index}}_KEY_UP_VOLTAGE / JOYSTICK_ADC_VOLTAGE_REFERENCE) * JOYSTICK_ADC_{{@index}}_RESOLUTION)
+#define JOYSTICK_ADC_{{@index}}_KEY_LEFT_VAL     ((JOYSTICK_ADC_{{@index}}_KEY_LEFT_VOLTAGE / JOYSTICK_ADC_VOLTAGE_REFERENCE) * JOYSTICK_ADC_{{@index}}_RESOLUTION)
+#define JOYSTICK_ADC_{{@index}}_KEY_DOWN_VAL     ((JOYSTICK_ADC_{{@index}}_KEY_DOWN_VOLTAGE / JOYSTICK_ADC_VOLTAGE_REFERENCE) * JOYSTICK_ADC_{{@index}}_RESOLUTION)
+#define JOYSTICK_ADC_{{@index}}_KEY_RIGHT_VAL    ((JOYSTICK_ADC_{{@index}}_KEY_RIGHT_VOLTAGE / JOYSTICK_ADC_VOLTAGE_REFERENCE) * JOYSTICK_ADC_{{@index}}_RESOLUTION)
+#define JOYSTICK_ADC_{{@index}}_KEY_CENTER_VAL   ((JOYSTICK_ADC_{{@index}}_KEY_CENTER_VOLTAGE / JOYSTICK_ADC_VOLTAGE_REFERENCE) * JOYSTICK_ADC_{{@index}}_RESOLUTION)
+
+/* Margin error between max and min key compared value in 15% +1 */
+#define JOYSTICK_ADC_{{@index}}_KEY_TOLERANCE(val)   (((val * 15)/100) + 1)
+{{/with}}
+{{/with}}
+{{/each}}
+{{/if}}
+
+/* Functions to retrieve the part object */
+{{#if (eq @root.IsADCioUsed true)}}
+{{#each @root.joy_instances}}
+{{assign 'ctx' (@root.SWConfigurationAPI.getSwInstanceConfiguration this)~}}
+joy_adc_t *mx_joystick_adc_{{@index}}_getobject(void);
+{{/each}}
+{{/if}}
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* MX_JOYSTICK_H */

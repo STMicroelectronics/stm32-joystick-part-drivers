@@ -1,0 +1,119 @@
+{
+  "componentid": "::Board Part:STM32CubeMX2 Config:JOYSTICK",
+  "type": "object",
+  "grammarVersion": "3.8.0",
+  "license": "Copyright (c) 2026 STMicroelectronics",
+  "properties": {
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "info": {
+          "title": "JOYSTICK Configuration",
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string",
+              "title": "User Label",
+              "description": "Adds extra #define in generated code",
+              "default": "MX_JOY1",
+              "unique": "project",
+              "unicityTag": "parts_joystick_sw_label",
+              "minLength": 3,
+              "maxLength": 15,
+              "actions": [
+                {
+                  "type": "error",
+                  "condition": "!/^[A-Za-z_][A-Za-z0-9_]*$/.test($value)",
+                  "message": "Name must be a valid C identifier: start with a letter or underscore, and contain only letters, digits, or underscores."
+                }
+              ]
+            },
+            "interface": {
+              "title": "Interface selection",
+              "description": "Select the Interface to be configured",
+              "type": "string",
+              "oneOf": [
+                {
+                  "const": "ADC",
+                  "title": "ADC"
+                }
+              ],
+              "default": "ADC"
+            }
+          }
+        },
+        "resourcesAllocation": {
+          "title": "STM32 resources allocations",
+          "type": "object",
+          "properties": {
+            "adcIoCfg": {
+              "type": "object",
+              "title": "ADC Interface Configuration",
+              "actions": [
+                {
+                  "type": "include",
+                  "condition": "$info.interface === 'ADC'"
+                }
+              ],
+              "properties": {
+                "adcInstance": {
+                  "type": "object",
+                  "title": "ADC Instance",
+                  "description": "Ensure the ADC is configured in HAL with polling mode, software trigger, and single channel conversion.",
+                  "objectType": "bind.peripheral.config",
+                  "criteria": {
+                    "peripheralType": [
+                      "adc"
+                    ]
+                  },
+                  "actions": [
+                    {
+                      "type": "error",
+                      "condition": "!$resourcesAllocation.adcIoCfg.adcInstance?.selection",
+                      "message": "Please select an ADC instance configured in the ADC Peripheral configuration panel."
+                    }
+                  ]
+                },
+                "key_center_voltage_value": {
+                  "title": "Key Center measurement voltage",
+                  "type": "number",
+                  "unit": "volt",
+                  "description": "Input voltage for the Center key of the joystick.",
+                  "default":0
+                },
+                "key_left_voltage_value": {
+                  "title": "Key LEFT measurement voltage",
+                  "type": "number",
+                  "unit": "volt",
+                  "description": "Input voltage for the LEFT key of the joystick.",
+                  "default": 0.66
+                },
+                "key_down_voltage_value": {
+                  "title": "Key DOWN measurement voltage",
+                  "type": "number",
+                  "unit": "volt",
+                  "description": "Input voltage for the  DOWN key of the joystick.",
+                  "default": 1.32
+                },
+                "key_up_voltage_value": {
+                  "title": "Key UP measurement voltage",
+                  "type": "number",
+                  "unit": "volt",
+                  "description": "Input voltage for the UP key of the joystick.",
+                  "default": 2.013
+                },
+                "key_right_voltage_value": {
+                  "title": "Key RIGHT measurement voltage",
+                  "type": "number",
+                  "unit": "volt",
+                  "description": "Input voltage for the RIGHT key of the joystick.",
+                  "default": 2.64
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
